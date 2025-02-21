@@ -1,14 +1,6 @@
 import {Component} from '@angular/core';
 import {ChessBoard} from '../../chess-logic/chess-board';
-import {
-  CheckState,
-  Color,
-  Coordinates,
-  FENChar,
-  LastMove,
-  pieceImagePaths,
-  SafeSquares
-} from '../../chess-logic/models';
+import {CheckState, Color, Coordinates, FENChar, LastMove, pieceImagePaths} from '../../chess-logic/models';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {SelectedSquare} from './models';
 
@@ -23,10 +15,6 @@ export class ChessBoardComponent {
   private chessBoard = new ChessBoard();
   public pieceImagePaths = pieceImagePaths;
   public chessBoardView: (FENChar | null)[][] = this.chessBoard.chessBoardView;
-
-  public get safeSquares(): SafeSquares {
-    return this.chessBoard.safeSquares
-  }
 
   public get gameOverMessage(): string | undefined {
     return this.chessBoard.gameOverMessage
@@ -48,6 +36,16 @@ export class ChessBoardComponent {
       [FENChar.BlackKnight, FENChar.BlackBishop, FENChar.BlackRook, FENChar.BlackQueen]
   }
 
+  public flipMode: boolean = false
+
+  public flipBoard(): void {
+    this.flipMode = !this.flipMode
+    this.chessBoardView.reverse(); // Flip board rows
+
+    for (let row of this.chessBoardView) {
+      row.reverse(); // Flip each row to fully rotate the board
+    }
+  }
 
   public get playerColor(): Color {
     return this.chessBoard.playerColor
