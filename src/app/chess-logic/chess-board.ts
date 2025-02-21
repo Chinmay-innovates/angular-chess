@@ -345,7 +345,11 @@ export class ChessBoard {
   }
 
   private isGameFinished(): boolean {
-    if (this._safeSquares.size) {
+    if (this.insufficientMaterial()) {
+      this._isGameOverMessage = "Draw by insufficient material";
+      return true;
+    }
+    if (!this._safeSquares.size) {
       if (this._checkState.isInCheck) {
         const prevPlayer: string = this.playerColor === Color.WHITE ? "Black" : "White"
         this._isGameOverMessage = `${prevPlayer} won by checkmate`;
