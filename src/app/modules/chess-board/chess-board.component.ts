@@ -1,6 +1,14 @@
 import {Component} from '@angular/core';
 import {ChessBoard} from '../../chess-logic/chess-board';
-import {Color, Coordinates, FENChar, pieceImagePaths, SafeSquares} from '../../chess-logic/models';
+import {
+  CheckState,
+  Color,
+  Coordinates,
+  FENChar,
+  LastMove,
+  pieceImagePaths,
+  SafeSquares
+} from '../../chess-logic/models';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {SelectedSquare} from './models';
 
@@ -22,6 +30,20 @@ export class ChessBoardComponent {
 
   private selectedSquare: SelectedSquare = {piece: null}
   private safeSquaresList: Coordinates[] = []
+  private lastMove: LastMove | undefined = this.chessBoard.lastMove
+  private checkState: CheckState = this.chessBoard.checkState
+
+  // promotion properties
+  public isPromotionActive: boolean = false
+  private promotedPiece: FENChar | null = null
+  private promotionCoordinates: Coordinates | null = null
+
+  public promotionPieces(): FENChar[] {
+    return this.playerColor === Color.WHITE ?
+      [FENChar.WhiteKnight, FENChar.WhiteBishop, FENChar.WhiteRook, FENChar.WhiteQueen] :
+      [FENChar.BlackKnight, FENChar.BlackBishop, FENChar.BlackRook, FENChar.BlackQueen]
+  }
+
 
   public get playerColor(): Color {
     return this.chessBoard.playerColor
@@ -40,13 +62,83 @@ export class ChessBoardComponent {
     return this.safeSquaresList.some(coordinate => coordinate.x === x && coordinate.y === y);
   }
 
+  public isSquareLastMove(x: number, y: number): boolean {
+    if (!this.lastMove) return false;
+    const {prevX, prevY, currX, currY} = this.lastMove
+    return x === prevX && y === prevY || x === currX && y === currY;
+  }
+
+  public isSquareChecked(x: number, y: number): boolean {
+    return this.checkState.isInCheck && this.checkState.x === x && this.checkState.y === y;
+  }
+
+  private unmarkingPreviouslySelectedAndSafeSquares(): void {
+    this.selectedSquare = {piece: null}
+    this.safeSquaresList = []
+
+    if (this.isPromotionActive) {
+      this.isPromotionActive = false
+      this.promotedPiece = null
+      this.promotionCoordinates = null
+    }
+  }
+
   public selectingPiece(x: number, y: number): void {
     const piece: FENChar | null = this.chessBoardView[x][y];
     if (!piece) return;
-    if(this.isWrongPieceSelected(piece)) return;
+    if (this.isWrongPieceSelected(piece)) return;
+
+    const isSameSquareClicked: boolean = !!this.selectedSquare.piece &&
+      this.selectedSquare.x === x && this.selectedSquare.y === y
+    this.unmarkingPreviouslySelectedAndSafeSquares();
+    if (isSameSquareClicked) return;
 
     this.selectedSquare = {piece, x, y};
     this.safeSquaresList = this.chessBoard.safeSquares.get(`${x}-${y}`) || [];
+  }
+
+  private placingPiece(dx: number, dy: number): void {
+    if (!this.selectedSquare.piece) return;
+    if (!this.isSquareSafeForSelectedPiece(dx, dy)) return;
+
+    // Pawn promotion
+    const isPawnSelected: boolean = this.selectedSquare.piece === FENChar.WhitePawn || this.selectedSquare.piece === FENChar.BlackPawn
+    const isPawnOnLastRank: boolean = isPawnSelected && (dx === 7 || dx === 0)
+    const shouldOpenPromotionDialog: boolean = !this.isPromotionActive && isPawnOnLastRank
+
+    if (shouldOpenPromotionDialog) {
+      this.isPromotionActive = true
+      this.promotionCoordinates = {
+        x: dx,
+        y: dy,
+      }
+      return;
+    }
+
+    const {x, y} = this.selectedSquare;
+    this.updateBoard(x, y, dx, dy);
+  }
+
+  private updateBoard(x: number, y: number, dx: number, dy: number): void {
+    this.chessBoard.move(x, y, dx, dy, this.promotedPiece);
+    this.chessBoardView = this.chessBoard.chessBoardView;
+    this.checkState = this.chessBoard.checkState;
+    this.lastMove = this.chessBoard.lastMove;
+    this.unmarkingPreviouslySelectedAndSafeSquares();
+  }
+
+  public promotePiece(piece: FENChar): void {
+    if (!this.promotionCoordinates || !this.selectedSquare.piece) return
+
+    this.promotedPiece = piece
+    const {x: newX, y: newY} = this.promotionCoordinates
+    const {x: prevX, y: prevY} = this.selectedSquare
+    this.updateBoard(prevX, prevY, newX, newY);
+  }
+
+  public move(x: number, y: number): void {
+    this.selectingPiece(x, y)
+    this.placingPiece(x, y)
   }
 
   private isWrongPieceSelected(piece: FENChar): boolean {

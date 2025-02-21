@@ -3,7 +3,9 @@
     <div *ngFor="let piece of row; let y = index" class="square" [ngClass]="{ 'dark': isSquareDark(x,y),
     'light': !isSquareDark(x,y),
     'selected-square': isSquareSelected(x,y),
-    }" (click)="selectingPiece(x,y)"
+    'last-move':isSquareLastMove(x,y),
+    'king-in-check': isSquareChecked(x,y),
+    }" (click)="move(x,y)"
 
     >
 
@@ -13,5 +15,12 @@
       <img *ngIf="piece" [ngSrc]="pieceImagePaths[piece]" height="75" width="75" alt="{{ piece }}" class="piece">
     </div>
 
+  </div>
+  <div *ngIf="isPromotionActive" class="promotion-dialog">
+    <img *ngFor="let piece of promotionPieces()" [ngSrc]="pieceImagePaths[piece]" alt="Promotion"
+         height="75" width="75" (click)="promotePiece(piece)" >
+    <span class="close-promotion-dialog">
+      &times;
+    </span>
   </div>
 </div>
