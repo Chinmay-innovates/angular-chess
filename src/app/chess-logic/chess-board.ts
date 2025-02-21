@@ -6,6 +6,7 @@ import {Pawn} from './piece/pawn';
 import {Rook} from './piece/rook';
 import {Piece} from './piece/piece';
 import {CheckState, Color, Coordinates, FENChar, LastMove, SafeSquares} from './models';
+import {FENConverter} from './FENConverter';
 
 export class ChessBoard {
   private chessBoard: (Piece | null)[][];
@@ -18,6 +19,14 @@ export class ChessBoard {
 
   private _isGameOver: boolean = false;
   private _isGameOverMessage: string | undefined;
+
+  private fullMoveNumber: number = 1
+  private threeFoldRepetitionDict = new Map<string, number>();
+  private threeFoldRepetitionFlag: boolean = false;
+
+  private _boardAsFEN: string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  private FENConverter = new FENConverter();
+
 
   constructor() {
     this.chessBoard = [
@@ -73,6 +82,10 @@ export class ChessBoard {
 
   public get gameOverMessage(): string | undefined {
     return this._isGameOverMessage
+  }
+
+  public get boardAsFEN(): string {
+    return this._boardAsFEN;
   }
 
   public static isSquareDark(x: number, y: number): boolean {
@@ -306,6 +319,11 @@ export class ChessBoard {
     this._playerColor = this._playerColor === Color.WHITE ? Color.BLACK : Color.WHITE;
     this.isInCheck(this._playerColor, true);
     this._safeSquares = this.findSafeSquares();
+
+    if (this.playerColor === Color.WHITE) this.fullMoveNumber++;
+    this._boardAsFEN = this.FENConverter.convertBoardToFEN(this.chessBoard, this._playerColor, this._lastMove, this.fiftyMoveRuleCounter, this.fullMoveNumber);
+    this.updateThreeFoldRepetitionDict(this._boardAsFEN);
+
     this._isGameOver = this.isGameFinished();
   }
 
@@ -357,6 +375,12 @@ export class ChessBoard {
       } else this._isGameOverMessage = "Draw by stalemate";
       return true;
     }
+
+    if (this.threeFoldRepetitionFlag) {
+      this._isGameOverMessage = "Draw by threefold repetition";
+      return true;
+    }
+
     if (this.fiftyMoveRuleCounter === 50) {
       this._isGameOverMessage = "Draw by fifty move rule";
       return true;
@@ -367,17 +391,16 @@ export class ChessBoard {
 
   //Insuficient material
   private playerHasOnlyTwoKnightsAndKing(pieces: { piece: Piece, x: number, y: number }[]): boolean {
-    return pieces.length === 3 && pieces.filter(({ piece }) => piece instanceof Knight).length === 2;
+    return pieces.length === 3 && pieces.filter(({piece}) => piece instanceof Knight).length === 2;
   }
 
   private playerHasOnlyBishopsWithSameColorAndKing(pieces: { piece: Piece, x: number, y: number }[]): boolean {
-    const bishops = pieces.filter(({ piece }) => piece instanceof Bishop);
+    const bishops = pieces.filter(({piece}) => piece instanceof Bishop);
     if (bishops.length !== pieces.length - 1) return false; // Ensure only one non-bishop piece (the king)
 
-    const areAllBishopsSameColor = new Set(bishops.map(({ x, y }) => ChessBoard.isSquareDark(x, y))).size === 1;
+    const areAllBishopsSameColor = new Set(bishops.map(({x, y}) => ChessBoard.isSquareDark(x, y))).size === 1;
     return areAllBishopsSameColor;
   }
-
 
   private insufficientMaterial(): boolean {
     const whitePieces: { piece: Piece, x: number, y: number }[] = [];
@@ -425,5 +448,18 @@ export class ChessBoard {
     return false;
   }
 
+  private updateThreeFoldRepetitionDict(FEN: string): void {
+    const threeFoldRepetitionFENKey: string = FEN.split(" ").slice(0, 4).join("");
+    const threeFoldRepetitionValue: number | undefined = this.threeFoldRepetitionDict.get(threeFoldRepetitionFENKey);
 
+    if (threeFoldRepetitionValue === undefined)
+      this.threeFoldRepetitionDict.set(threeFoldRepetitionFENKey, 1);
+    else {
+      if (threeFoldRepetitionValue === 2) {
+        this.threeFoldRepetitionFlag = true
+        return;
+      }
+      this.threeFoldRepetitionDict.set(threeFoldRepetitionFENKey, 2);
+    }
+  }
 }
