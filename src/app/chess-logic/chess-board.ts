@@ -276,6 +276,7 @@ export class ChessBoard {
 
 
   public move(x: number, y: number, dx: number, dy: number, promotedPieceType: FENChar | null): void {
+    if (this._isGameOver) throw new Error("Game is over, you cannot play move")
     if (!this.areCoordinatesValid(x, y) || !this.areCoordinatesValid(dx, dy)) return;
     const piece: Piece | null = this.chessBoard[x][y];
     if (!piece || piece.color !== this._playerColor) return;

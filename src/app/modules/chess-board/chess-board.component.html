@@ -15,6 +15,9 @@
       </div>
       <img *ngIf="piece" [ngSrc]="pieceImagePaths[piece]" height="75" width="75" alt="{{ piece }}" class="piece">
     </div>
+    <h2 *ngIf="gameOverMessage" class="game-over-message">
+      {{ gameOverMessage }}
+    </h2>
 
   </div>
   <div *ngIf="isPromotionActive" class="promotion-dialog">

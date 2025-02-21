@@ -30,7 +30,15 @@
 
 .game-over-message {
   color: white;
+  position: absolute; /* Prevents affecting board layout */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
 }
+
 
 .promotion-dialog {
   position: absolute;
