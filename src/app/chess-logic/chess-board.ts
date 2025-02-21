@@ -358,4 +358,65 @@ export class ChessBoard {
     }
     return false;
   }
+
+
+  //Insuficient material
+  private playerHasOnlyTwoKnightsAndKing(pieces: { piece: Piece, x: number, y: number }[]): boolean {
+    return pieces.filter(piece => piece.piece instanceof Knight).length === 2;
+  }
+
+  private playerHasOnlyBishopsWithSameColorAndKing(pieces: { piece: Piece, x: number, y: number }[]): boolean {
+    const bishops = pieces.filter(piece => piece.piece instanceof Bishop);
+    const areAllBishopsOfSameColor = new Set(bishops.map(bishop => ChessBoard.isSquareDark(bishop.x, bishop.y))).size === 1;
+    return bishops.length === pieces.length - 1 && areAllBishopsOfSameColor;
+  }
+
+  private insufficientMaterial(): boolean {
+    const whitePieces: { piece: Piece, x: number, y: number }[] = [];
+    const blackPieces: { piece: Piece, x: number, y: number }[] = [];
+
+    for (let x = 0; x < this.boardSize; x++) {
+      for (let y = 0; y < this.boardSize; y++) {
+        const piece: Piece | null = this.chessBoard[x][y];
+        if (!piece) continue;
+
+        if (piece.color === Color.WHITE) whitePieces.push({piece, x, y});
+        else blackPieces.push({piece, x, y});
+      }
+    }
+
+    // King vs King
+    if (whitePieces.length === 1 && blackPieces.length === 1)
+      return true;
+
+    // King and Minor Piece vs King
+    if (whitePieces.length === 1 && blackPieces.length === 2)
+      return blackPieces.some(piece => piece.piece instanceof Knight || piece.piece instanceof Bishop);
+
+    else if (whitePieces.length === 2 && blackPieces.length === 1)
+      return whitePieces.some(piece => piece.piece instanceof Knight || piece.piece instanceof Bishop);
+
+    // both sides have bishop of same color
+    else if (whitePieces.length === 2 && blackPieces.length === 2) {
+      const whiteBishop = whitePieces.find(piece => piece.piece instanceof Bishop);
+      const blackBishop = blackPieces.find(piece => piece.piece instanceof Bishop);
+
+      if (whiteBishop && blackBishop) {
+        const areBishopsOfSameColor: boolean = ChessBoard.isSquareDark(whiteBishop.x, whiteBishop.y) && ChessBoard.isSquareDark(blackBishop.x, blackBishop.y) || !ChessBoard.isSquareDark(whiteBishop.x, whiteBishop.y) && !ChessBoard.isSquareDark(blackBishop.x, blackBishop.y);
+
+        return areBishopsOfSameColor;
+      }
+    }
+
+    if (whitePieces.length === 3 && blackPieces.length === 1 && this.playerHasOnlyTwoKnightsAndKing(whitePieces) ||
+      whitePieces.length === 1 && blackPieces.length === 3 && this.playerHasOnlyTwoKnightsAndKing(blackPieces)
+    ) return true;
+
+    if (whitePieces.length >= 3 && blackPieces.length === 1 && this.playerHasOnlyBishopsWithSameColorAndKing(whitePieces) ||
+      whitePieces.length === 1 && blackPieces.length >= 3 && this.playerHasOnlyBishopsWithSameColorAndKing(blackPieces)
+    ) return true;
+
+    return false;
+  }
+
 }
