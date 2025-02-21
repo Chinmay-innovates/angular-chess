@@ -1,5 +1,5 @@
 {
-  "name": "chass",
+  "name": "chess",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:chass": "node dist/chass/server/server.mjs"
+    "serve:ssr:chess": "node dist/chess/server/server.mjs"
   },
   "private": true,
   "dependencies": {

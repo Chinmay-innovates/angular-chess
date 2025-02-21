@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "chass": {
+    "chess": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/chass",
+            "outputPath": "dist/chess",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -21,9 +21,12 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
+              "src/favicon.ico",
+              "src/assets",
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "public",
+                "output": "/"
               }
             ],
             "styles": [
@@ -64,10 +67,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "chass:build:production"
+              "buildTarget": "chess:build:production"
             },
             "development": {
-              "buildTarget": "chass:build:development"
+              "buildTarget": "chess:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -97,5 +100,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "2e901c9e-f86f-4dde-a13f-2334e869eb76"
   }
 }
