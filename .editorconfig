@@ -5,13 +5,20 @@ root = true
 charset = utf-8
 indent_style = space
 indent_size = 2
+end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.ts]
-quote_type = single
-ij_typescript_use_double_quotes = false
+# TypeScript & JavaScript (Handled via ESLint/Prettier for quotes)
+[*.{ts,tsx,js,jsx}]
+max_line_length = 120
 
-[*.md]
+# Markdown & AsciiDoc: Allow long lines and preserve trailing spaces
+[*.{md,adoc}]
 max_line_length = off
 trim_trailing_whitespace = false
+
+# Python: Ensure consistency in formatting
+[*.py]
+indent_size = 4
+

@@ -15,6 +15,7 @@ export class ChessBoardComponent {
   private chessBoard = new ChessBoard();
   public pieceImagePaths = pieceImagePaths;
   public chessBoardView: (FENChar | null)[][] = this.chessBoard.chessBoardView;
+  public lcpPiece: string | null = null;
 
   public get gameOverMessage(): string | undefined {
     return this.chessBoard.gameOverMessage
@@ -39,12 +40,25 @@ export class ChessBoardComponent {
   public flipMode: boolean = false
 
   public flipBoard(): void {
+    if (this.chessBoard.isGameOver()) return;
     this.flipMode = !this.flipMode
     this.chessBoardView.reverse(); // Flip board rows
 
     for (let row of this.chessBoardView) {
       row.reverse(); // Flip each row to fully rotate the board
     }
+  }
+
+  public isLCPImage(piece: string): boolean {
+    if (!this.lcpPiece && this.isLikelyLCP(piece)) {
+      this.lcpPiece = piece;
+    }
+    return piece === this.lcpPiece;
+  }
+
+  // A heuristic function to determine which piece is likely LCP
+  private isLikelyLCP(piece: string): boolean {
+    return piece.includes('rook');
   }
 
   public get playerColor(): Color {
